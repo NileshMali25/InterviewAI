@@ -1,0 +1,57 @@
+# ============================================================
+# Render.com Deployment Configuration
+# ============================================================
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: ai-interview-platform
+    env: java
+    plan: free           # Change to 'starter' for always-on
+    buildCommand: "./mvnw package -DskipTests -q"
+    startCommand: "java -jar target/ai-interview-platform-1.0.0.jar"
+    healthCheckPath: /api/questions/public
+    autoDeploy: true     # Auto-deploy on every GitHub push
+
+    envVars:
+      # ── Database ──────────────────────────────────────────
+      # Option A: Use H2 in-memory (zero config, data resets on restart)
+      - key: SPRING_PROFILES_ACTIVE
+        value: h2
+
+      # Option B: Use Render PostgreSQL (uncomment + change profile)
+      # - key: SPRING_PROFILES_ACTIVE
+      #   value: mysql
+      # - key: SPRING_DATASOURCE_URL
+      #   fromDatabase:
+      #     name: ai-interview-db
+      #     property: connectionString
+      # - key: SPRING_DATASOURCE_USERNAME
+      #   fromDatabase:
+      #     name: ai-interview-db
+      #     property: user
+      # - key: SPRING_DATASOURCE_PASSWORD
+      #   fromDatabase:
+      #     name: ai-interview-db
+      #     property: password
+
+      # ── JWT ───────────────────────────────────────────────
+      - key: JWT_SECRET
+        generateValue: true   # Render auto-generates a secure random value
+
+      # ── AI Provider (Optional) ────────────────────────────
+      # Get a free key: https://aistudio.google.com/app/apikey
+      - key: GEMINI_API_KEY
+        value: ""             # Paste your key here (or set in Render dashboard)
+
+      # ── Java Runtime ──────────────────────────────────────
+      - key: JAVA_VERSION
+        value: "21"
+      - key: PORT
+        value: "8080"
+
+# ── Optional: Persistent PostgreSQL database ──────────────
+# Uncomment to provision a free Render Postgres database
+# databases:
+#   - name: ai-interview-db
+#     plan: free
